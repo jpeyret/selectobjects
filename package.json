@@ -4,7 +4,8 @@
   "description": "--- footer: MIT Licensed ---",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs:build" : "vuepress build"
   },
   "repository": {
     "type": "git",
@@ -16,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/jpeyret/selectobjects/issues"
   },
-  "homepage": "https://github.com/jpeyret/selectobjects#readme"
+  "homepage": "https://github.com/jpeyret/selectobjects#readme",
+  "dependencies" : {
+    "vuepress" : "0.1"
+  }
+
 }
