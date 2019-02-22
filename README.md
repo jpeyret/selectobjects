@@ -2,4 +2,4 @@
 footer: MIT Licensed
 ---
 
-# Select Objects 2
+# Musing about Python, databases and PeopleSoft

@@ -1,6 +1,6 @@
 # Calling a Component Interface from an Application Engine, part 2
 
-[Part 1](/application_engine/ae_call_ci/) looked at the “obvious” way for an Application Engine to call a Component Interface and why that can result in fragile and abend-prone batch programs.
+[Part 1](/application_engine/ae_call_ci_p1/) looked at the “obvious” way for an Application Engine to call a Component Interface and why that can result in fragile and abend-prone batch programs.
 
 Instead, here’s a simple Application Class that handles most of the low-level technical details around the generally recommended approach: passing a Rowset (in this particular case, to be exact, an in-memory Record instance) to the CI instead. All you have to do is plugging in your actual business rules into `Method.ci_business_logic`.
 

@@ -1,10 +1,15 @@
 module.exports = {
-    title: 'Select Objects',
+    title: 'Select Objects - thinking about Python, databases and PeopleSoft',
+    home: true,
+
+
     themeConfig: {
         nav: [
             { text: 'Services', link: '/services/' },
             { text: 'About', link: '/about/' }
         ],
+
+    logo: '/select-objects-logo-small.png',
 
         displayAllHeaders: true,
 
