@@ -1,0 +1,173 @@
+# Calling a Component Interface from an Application Engine, part 2
+
+<div class="post-content ff-richtext"><p><a href="../ae_call_ci/index.html">Part 1</a> looked at the “obvious” way for an Application Engine to call a Component Interface and why that can result in fragile and abend-prone batch programs.</p>
+<p>Here’s a simple Application Class that handles most of the low-level technical details around the generally recommended approach: passing a Rowset (in this particular case, to be exact, an in-memory Record instance) to the CI instead. You just have to plug in your actual business in one method, <span class="interest">ci_business_logic</span>.</p>
+<p>The base classes, along with more explanations and sample code, are on my <a href="https://github.com/jpeyret/ae2ci" rel="noopener" target="_blank">AE2CI repository on Github.</a></p>
+<p>I didn’t originally intend to write it as an Application Class, but while adapting some earlier code I had written for a client, I realized that most of the repetitive and tricky code could be moved to a reusable class.</p>
+<h3>Design goals:</h3>
+<ul>
+<li>
+<h4>Simplicity</h4>
+<p>Most of the “technical” code is in the base class. Business logic goes in your subclasses’ <em>ci_business_logic</em> method</p></li>
+<li>
+<h4>Reliable error handling</h4>
+<p>Catch errors and throw exceptions automatically. Distinguish between data errors (expected) and coding errors. Display errors in message fields.</p></li>
+<li>
+<h4>Use transactions</h4>
+<p>Commit row by row. Allow the user to correct the data for rejected rows. If multiple CIs are being called, support all-or-nothing writes</p></li>
+</ul>
+<p> </p>
+<h3>Application Engine peoplecode</h3>
+<pre class="code text-info"><code>/*  */
+/*this is from Github */
+import AE2CI:*;
+
+
+/* The 2 subclasses that contain your CI business logic */
+import TCI:*;
+Component TCI:Wrap_CI_JOB_DATA &amp;ci_job;
+Component TCI:Wrap_CI_PERSONAL_DATA &amp;ci_personal;
+
+Local boolean &amp;saved = False;
+
+/* this is the state record we use to save status/error messages on */
+Local Record &amp;rec_comm = GetRecord(Record.AE2CIAET);
+
+If (&amp;ci_job = Null) Then
+   &amp;ci_job = create TCI:Wrap_CI_JOB_DATA();
+End-If;
+
+If (&amp;ci_personal = Null) Then
+   &amp;ci_personal = create TCI:Wrap_CI_PERSONAL_DATA();
+End-If;
+
+/* All you need for the Rowset are the Fill query and the Record being used */
+Local Rowset &amp;rs_data = CreateRowset(Record.TCI_SOURCE);
+&amp;rs_data.Fill("WHERE EMPLID = :1", TCI_AET.EMPLID);
+Local Record &amp;rec_data = &amp;rs_data.GetRow(1).GetRecord(Record.TCI_SOURCE);
+
+/* call first CI, handle exceptions */
+try
+   &amp;saved = &amp;ci_job.callci(&amp;rec_comm, &amp;rec_data);
+catch AE2CI:NoDataException &amp;e_missing_job
+   /* we're treating missing data slightly differently, because we can differentiate based on the exception class */
+   Exit (0);
+catch Exception &amp;e_any_job
+   SQLExec("ROLLBACK");
+   Exit (0);
+end-try;
+
+/* call second CI, handle exceptions */
+try
+   &amp;saved = &amp;ci_personal.callci(&amp;rec_comm, &amp;rec_data);
+catch Exception &amp;e_ci_personal
+   SQLExec("ROLLBACK");
+   Exit (0);
+end-try;
+</code></pre>
+<div class="explain">What’s in that AE code above? Let’s take a closer look.</div>
+<h4>The CI wrapper subclasses doing the real work</h4>
+<pre class="code text-info"><code>
+Component TCI:Wrap_CI_JOB_DATA &amp;ci_job;
+Component TCI:Wrap_CI_PERSONAL_DATA &amp;ci_personal;
+</code></pre>
+<div class="explain">Those are the 2 specialized CI wrapper subclasses that you have to write. They know what fields to get from the data record, <span class="interest">Record.TCI_SOURCE</span> and where to map them in the CI. The only real customization you have to carry out is on method <span class="interest">ci_business_logic</span>.</div>
+<h4>Prepping the data as a Rowset Record</h4>
+<pre class="code text-info"><code>
+Local Rowset &amp;rs_data = CreateRowset(Record.TCI_SOURCE);
+&amp;rs_data.Fill("WHERE EMPLID = :1", TCI_AET.EMPLID);
+Local Record &amp;rec_data = &amp;rs_data.GetRow(1).GetRecord(Record.TCI_SOURCE);
+</code></pre>
+<div class="explain">All you need to do to prep the data for the CI wrapper is fill the correct rowset and get its record to pass on to the CI wrapper. Note that this class does not have to use a Rowset since the incoming data is flat and not nested. Supporting nested Rowsets wouldn’t be difficult, except for the user error feedback field.</div>
+<h4>Calling the CI wrappers</h4>
+<pre class="code text-info"><code>
+   try
+   &amp;saved = &amp;ci_job.callci(&amp;rec_comm, &amp;rec_data);
+catch AE2CI:NoDataException &amp;e_missing_job
+   /* we're treating missing data slightly differently, because we can differentiate based on the exception class */
+   Exit (0);
+catch Exception &amp;e_any_job
+   SQLExec("ROLLBACK");
+   Exit (0);
+end-try;
+</code></pre>
+<div class="explain">
+<p>The AE really doesn’t know much, it just calls the CI with both <span class="interest">&amp;rec_comm</span>, the communication record for the wrapper and <span class="interest">&amp;rec_data</span> holding the data to be loaded. The wrapper’s <span class="interest">callci</span> method does all the work and returns a boolean to indicate whether anything was saved or not. It can also throw an exception.Having the AE initiate rollbacks here allows one CI to save successfully first, but then rollback in case another CI has any problems. The individual CIs don’t have to care whether they are operating solo or not.</p>
+<p>Not bad, 40 lines of code to call 2 CIs and manage a transaction around them…</p>
+</div>
+<h3>Supporting records</h3>
+<p>For details on the structure of the supporting records, see <a href="../supporting-objects-for-ae2ci-loader/index.html#rec_comm">communication record</a> and <a href="../supporting-objects-for-ae2ci-loader/index.html#rec_data">data record</a></p>
+<h3>class Wrap_CI_PERSONAL_DATA</h3>
+<p>This is one of the CI wrapper subclasses, which you would have to write. The other one looks much the same.</p>
+<h4>class declaration</h4>
+<pre class="code text-info"><code>
+import AE2CI:*;
+
+class Wrap_CI_PERSONAL_DATA extends AE2CI:CiWrapper
+   method Wrap_CI_PERSONAL_DATA();
+   method callci(&amp;rec_comm As Record, &amp;rec_data As Record) Returns boolean;
+   method ci_business_logic(&amp;rec_comm As Record, &amp;data As Record) Returns boolean;
+end-class;
+
+method Wrap_CI_PERSONAL_DATA
+   %Super = create AE2CI:CiWrapper(CompIntfc.CI_PERSONAL_DATA);
+end-method;
+</code></pre>
+<div class="explain">The wrapper each have to extend <span class="interest">AE2CI:CiWrapper</span>, which you will find on Github. Their constructor passes in the name of the target Component Interface.</div>
+<h4>method ci_business_logic</h4>
+<p>This method mostly contains regular Component Interface type logic. You can need to return a boolean indicating whether or not</p>
+<pre class="code text-info"><code>
+/* all of the following is strictly business-specific logic and depends on the CI,
+the data record as well as the business requirements
+*/
+method ci_business_logic
+   /+ &amp;rec_comm as Record, +/
+   /+ &amp;data as Record +/
+   /+ Returns Boolean +/
+
+   /* sample minimal update-only implementation*/
+   Local boolean &amp;needs_saving;
+   %Super.myCI.KEYPROP_EMPLID = &amp;data.EMPLID.Value;
+
+   &amp;needs_saving = %Super.myCI.Get();
+   If Not &amp;needs_saving Then
+      rem assign user/developer feedback to the message-holding field;
+      rem %Super.fld_message.Value = "no PERSONAL_DATA for EMPLID." | &amp;data.EMPLID.Value;
+      /* indicate you don't need a save */
+      Return False;
+
+      rem or throw an Exception..., which will take care of message updating...;
+      &amp;msg = "no data for EMPLID." | &amp;data.EMPLID.Value;
+      throw create AE2CI:NoDataException(&amp;msg, %This);
+
+   End-If;
+
+   &amp;needs_saving = %This.check_business_logic_ok(&amp;rec_comm);
+   If Not &amp;needs_saving Then
+      Return False;
+   End-If;
+
+   If All(&amp;data.BIRTHCOUNTRY.Value) Then
+      %Super.myCI.PROP_BIRTHCOUNTRY = &amp;data.BIRTHCOUNTRY.Value;
+      &amp;needs_saving = True;
+   End-If;
+
+   Return &amp;needs_saving;
+
+end-method;
+
+
+</code></pre>
+<div class="explain">
+<p>This method is where you map your incoming data to the CI being used. You will need to return a boolean indicating if saving is required. Notice also that when you see some expected business problem with the data, you populate the <span class="interest">%Super.fld_message.Value</span> and return False. The rest of the code is much of the same and is typical of standard PeopleSoft Component Interface code.</p>
+<p>You can also call <span class="interest">check_business_logic_ok()</span> on the base class at any time – it checks the CI’s specialized attributes/methods like <span class="interest">ErrorPending</span> on your behalf. The wrapper class will automatically call it once again before attempting calling the Component Interface <span class="interest">save()</span>.</p>
+</div>
+<p>Note: I did not show <span class="interest">method callci</span> because it is always exactly the same, but needs to be re-implemented on each subclass, at least on PT 8.51, otherwise it would call the super’s ci_business_logic.</p>
+<h3>Conclusion:</h3>
+<p>The CI will operate as normal, but any errors and rollbacks it throws will be caught and notified to the Application Engine rather than causing an abend.</p>
+<p>I’ve experimented with fairly “hard” errors, like division by zeros or purposefully referencing wrong fieldnames in the data record or the CI. Even a compilation error, by declaring a function and then subsequently deleting that function. The exception details will be communicated to the <span class="interest">Notification and Message</span> fields in <span class="interest">&amp;rec_comm</span>.</p>
+<p>Try/catch in PeopleSoft is actually fairly reliable and robust, it’s only really the unexpected rollbacks that are causing troubles with Application Engine.</p>
+<p>There is one last, separate, Application Engine step required, which is to update the database with the values of the notification and message fields – those have been in-memory only so far, to allow them to survive rollbacks. For more details that and how to set up the Application Engine loop, please refer to my <a href="https://github.com/jpeyret/ae2ci/tree/master/examples">Github sample code</a>.</p>
+<h4>This is an overall diagram of the process:</h4>
+<p><img alt="flowchart of process" class="alignnone size-full wp-image-282" src="../wp-content/uploads/2017/09/flowchart.dot_.svg"/></p>
+</div>
