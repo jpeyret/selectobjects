@@ -1,4 +1,4 @@
-## Part 3 Appendix (Records and Application Engine schema)
+# Part 3 Appendix (Records and Application Engine schema)
 
 ### The Application Engine
 
@@ -38,6 +38,29 @@ This step is very important for loop management and user feedback. Coming after 
 
 This is the *communication* Record used to exchange information without saving into the database (remember those CI-initiated rollbacks).
 
+Fairly basic record, which only has 2 fields the wrapper cares about.  Those fields are typically already present in this form in any recent PeopleTools environment.  `Field.MESSAGE_TEXT_254` receives error/success messages intended for the end user.
+`Field.SET_NOTIFY_FLAG` receives 1 character codes indicating the result of the CI processing and its default values/meaning are: 
+
+
+Value 	| Meaning
+------------ | -------------
+I 	|initiated processing
+Y 	|data successfully loaded by CI
+N 	|data error, rejected by CI
+F 	|Technical/coding Exception
+
+
+Both those field’s names can easily be overridden in the CI wrapper constructor and so can the status values the wrapper uses to communicate. This allows you to use fields and codes that correspond more closely to your requirements.
+
+	method Wrap_CI_JOB_DATA
+	   %Super = create AE2CI:CiWrapper(CompIntfc.CI_JOB_DATA);
+	   %Super.msg_fieldname = "MESSAGE254";
+	   %Super.notify_exception = "E";  /* E, instead of F, is how technical exceptions are notified */
+	end-method;
+
+
+
+
 ![](./Record.AE2CIAET_trimmed.png)
 
 ### `Record.TCI_SOURCE`
@@ -45,4 +68,4 @@ This is the *communication* Record used to exchange information without saving i
 This is **your** data record that you want to load.
 
 ![](./Record.TCI_SOURCE_trimmed.png)
-		
+
