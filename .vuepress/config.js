@@ -3,7 +3,7 @@ module.exports = {
     home: true,
 
 
-    // this ends up on the Home page, under the title.
+    // this ends up on the Home page, under the title, via $description
     description: "SQL beats ORM",
 
 
