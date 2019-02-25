@@ -24,41 +24,21 @@ module.exports = {
 
         sidebar: [
 
-            {
-                title: 'Application Engine', // required
-                path: '/application_engine/', // optional, which should be a absolute path.
-                collapsable: false, // optional, defaults to true
-                sidebarDepth: 2, // optional, defaults to 1
-                children: [
-                    '/application_engine/ae_call_ci_p1/',
-                    '/application_engine/ae_call_ci_p2/',
-                    '/application_engine/ae_call_ci_p3/'
-                ]
-            }
+            // {
+            //     title: 'Application Engine', // required
+            //     path: '/application_engine/', // optional, which should be a absolute path.
+            //     collapsable: false, // optional, defaults to true
+            //     sidebarDepth: 2, // optional, defaults to 1
+            //     children: [
+            //         '/application_engine/',
+            //         '/application_engine/ae_call_ci_p1/',
+            //         '/application_engine/ae_call_ci_p2/',
+            //         '/application_engine/ae_call_ci_p3/'
+            //     ]
+            // }
+             '/application_engine/'
 
-        ],
-
-
-        sidebar2: [{
-                title: 'Group 1', // required
-                path: '/foo/', // optional, which should be a absolute path.
-                collapsable: false, // optional, defaults to true
-                sidebarDepth: 1, // optional, defaults to 1
-                children: [
-                    '/'
-                ]
-            },
-            {
-                title: 'Group 2',
-                children: [ /* ... */ ]
-            }
-        ],
-
-
-        features: [{
-            title: "test title1",
-            details: "test details 1"
-        }]
+        ]
 
     },
 
