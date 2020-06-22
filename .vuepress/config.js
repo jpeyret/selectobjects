@@ -1,54 +1,67 @@
 module.exports = {
-    title: 'Select Objects - thinking about Python, databases and PeopleSoft',
-    home: true,
+  title: 'Select Objects', // Title for the site. This will be displayed in the navbar.
+  // theme: '@vuepress/theme-blog',
+
+  head: [
+    ['link', { rel: 'icon', href: '/fav.png' }]
+  ],
 
 
-    // this ends up on the Home page, under the title, via $description
-    description: "SQL beats ORM",
+  themeConfig: {
+    // Please keep looking down to see the available options.
+
+    logo: "/selectobjects.png",
 
 
-    themeConfig: {
-        nav: [
-            { text: 'Services', link: '/services/' },
-            { text: 'About', link: '/about/' }
-        ],
+    nav: [
+      {
+        text: 'Blog',
+        link: '/',
+      },
+      // {
+      //   text: 'Issues',
+      //   link: '/issues/',
+      // },
+      {
+        text: 'Tags',
+        link: '/tag/',
+      },
+      {
+        text: 'About',
+        link: '/about/',
+      },
 
-        home: true,
-
-        //turns off the search, might as well until configured.
-        search: false,
-
-        logo: '/select-objects-logo-small.png',
-
-        displayAllHeaders: true,
-
-        sidebar: [
-
-            // {
-            //     title: 'Application Engine', // required
-            //     path: '/application_engine/', // optional, which should be a absolute path.
-            //     collapsable: false, // optional, defaults to true
-            //     sidebarDepth: 2, // optional, defaults to 1
-            //     children: [
-            //         '/application_engine/',
-            //         '/application_engine/ae_call_ci_p1/',
-            //         '/application_engine/ae_call_ci_p2/',
-            //         '/application_engine/ae_call_ci_p3/'
-            //     ]
-            // }
-             '/application_engine/'
-
-        ]
-
-    },
-
-    plugins: [
-
-        [
-            '@vuepress/plugin-blog',
-            {}
-        ]
     ],
 
+
+    directories: [
+      {
+        id: 'post',
+        dirname: '_posts',
+        path: '/',
+      },
+
+      {
+        id: 'issues',
+        dirname: '_issues',
+        path: '/issues/',
+        itemPermalink: '/issues/:slug',
+      },
+
+
+    ],
+ 
+    footer: {
+          contact: [
+            {
+              type: 'github',
+              link: 'https://github.com/jpeyret',
+            },
+          ],
+        },
+
+
+
+  }
 
 }

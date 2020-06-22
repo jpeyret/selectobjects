@@ -1,25 +1,22 @@
 {
-  "name": "selectobjects",
+  "name": "site",
   "version": "1.0.0",
-  "description": "--- footer: MIT Licensed ---",
+  "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dobuild": "vuepress build"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jpeyret/selectobjects.git"
   },
-  "keywords": [],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vuepress dev --port 8011",
+    "build": "NODE_ENV=production vuepress build"
+  },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jpeyret/selectobjects/issues"
-  },
   "homepage": "https://github.com/jpeyret/selectobjects#readme",
   "dependencies": {
-    "@vuepress/plugin-blog": "^1.0.0-alpha.0",
-    "vuepress": "^0.14"
+    "@vuepress/theme-blog": "^2.0.0",
+    "vuepress": "^1.0.0"
   }
 }
