@@ -1,0 +1,7 @@
+di_param_in:
+  config_file: /Users/jluc/kds2/mygithub/vuepresspreprocess/vuepresspreprocess/config.yaml
+  confirm: false
+  dir_out: /Users/jluc/kds2/issues2/096.vuepress/000.blogactual
+  directive: null
+  markdown: /Users/jluc/kds2/issues2/096.vuepress/000.blogparts/001.p1.application_engine/2018-09-01-README.md
+  verbose: false
